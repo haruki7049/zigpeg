@@ -1,0 +1,4 @@
+# Usage
+```bash
+nix-build
+```
