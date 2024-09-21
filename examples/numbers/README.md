@@ -1,4 +1,0 @@
-# Usage
-```bash
-nix-build
-```

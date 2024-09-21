@@ -27,7 +27,6 @@
             "-Doptimize=Debug"
           ];
         };
-        example-numbers = pkgs.callPackage ./examples/numbers { };
       in
       {
         # Use `nix fmt`
@@ -35,7 +34,7 @@
 
         # Use `nix flake check`
         checks = {
-          inherit zigpeg example-numbers;
+          inherit zigpeg;
           formatting = treefmtEval.config.build.check self;
         };
 
