@@ -1,69 +1,61 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    flake-parts.url = "github:hercules-ci/flake-parts";
-    treefmt-nix.url = "github:numtide/treefmt-nix";
+    systems.url = "github:nix-systems/default";
+    flake-compat.url = "github:edolstra/flake-compat";
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
+      inputs.nixpkgs-lib.follows = "nixpkgs";
+    };
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
     inputs:
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-      ];
+      systems = import inputs.systems;
       imports = [
         inputs.treefmt-nix.flakeModule
       ];
+
       perSystem =
         { pkgs, ... }:
-        let
-          zig = pkgs.zig_0_13;
-          zigpeg = pkgs.stdenv.mkDerivation {
-            pname = "zigpeg";
-            version = "dev";
-
-            src = ./.;
-
-            nativeBuildInputs = [
-              zig.hook
-            ];
-
-            zigBuildFlags = [
-              "-Doptimize=Debug"
-            ];
-          };
-        in
         {
           treefmt = {
-            projectRootFile = "flake.nix";
+            projectRootFile = ".git/config";
+
+            # Nix
             programs.nixfmt.enable = true;
-            programs.zig.enable = true;
+
+            # Rust
+            programs.rustfmt.enable = true;
+
+            # TOML
+            programs.taplo.enable = true;
+
+            # GitHub Actions
             programs.actionlint.enable = true;
-          };
 
-          checks = {
-            inherit zigpeg;
-          };
+            # Markdown
+            programs.mdformat.enable = true;
 
-          packages = {
-            inherit zigpeg;
-            default = zigpeg;
+            # ShellScript
+            programs.shellcheck.enable = true;
+            programs.shfmt.enable = true;
           };
 
           devShells.default = pkgs.mkShell {
             packages = [
-              # Compiler
-              zig
-
-              # LSP
+              # Zig
+              pkgs.zig_0_14
               pkgs.zls
+
+              # Nix
               pkgs.nil
             ];
-
-            shellHook = ''
-              export PS1="\n[nix-shell:\w]$ "
-            '';
           };
         };
     };

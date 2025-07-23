@@ -1,16 +1,15 @@
 .{
-    .name = "zigpeg",
+    .name = .zigpeg,
     .version = "0.0.0",
-    .minimum_zig_version = "0.13.0",
+    .fingerprint = 0xb60556cbe9b94b46,
+    .minimum_zig_version = "0.14.1",
 
-    .dependencies = .{
-    },
+    .dependencies = .{},
 
     .paths = .{
         "build.zig",
         "build.zig.zon",
         "src",
         "LICENSE",
-        "README.md",
     },
 }
