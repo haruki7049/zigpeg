@@ -1,8 +1,8 @@
 const std = @import("std");
 const testing = std.testing;
 
-pub const Parser = struct {
-    //pub fn parse(_expression: []const u8, text: []const u8) type {}
+pub const Parser = @import("parser.zig");
 
-    const Expression = struct {};
-};
+test "Import tests in modules" {
+    _ = @import("parser.zig");
+}
