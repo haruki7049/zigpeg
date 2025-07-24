@@ -40,9 +40,7 @@ test "boolean_parser" {
 
     // Expression
     const expression: []const u8 =
-        \\true <- "True"
-        \\false <- "False"
-        \\Bool <- { true / false }
+        \\Bool <- { "True" / "False" }
     ;
     std.debug.print("expression: {s}\n", .{expression});
 
