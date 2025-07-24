@@ -60,13 +60,6 @@ pub fn new(expression: []const u8, allocator: std.mem.Allocator) !Self {
     };
 }
 
-const arrow: []const u8 = "<-";
-const quotation: u8 = '"';
-const left_brace: u8 = '{';
-const right_brace: u8 = '}';
-const slash: u8 = '/';
-const backslash: u8 = '\\';
-
 test "Bool" {
     const expression: []const u8 =
         \\Bool <- { "True" / "False" }
