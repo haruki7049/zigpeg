@@ -7,17 +7,12 @@ const std = @import("std");
 const testing = std.testing;
 
 const Self = @This();
+const Parser = @import("rule/parser.zig");
+const Expression = Parser.Expression;
 const ArrayList = std.ArrayList;
 
 name: []const u8,
 expression: Expression,
-
-const Expression = union(enum) {
-    literal: []const u8,
-    reference: []const u8,
-    choice: []const Expression,
-    sequence: []const Expression,
-};
 
 pub fn deinit(self: Self, allocator: std.mem.Allocator) void {
     switch (self.expression) {
@@ -39,25 +34,19 @@ pub fn new(expression: []const u8, allocator: std.mem.Allocator) !Self {
     const brace_end = std.mem.lastIndexOfScalar(u8, expression, '}') orelse return error.InvalidSyntax;
     const inner = std.mem.trim(u8, expression[brace_start + 1 .. brace_end], " \t\r\n");
 
-    // ── split by '/' to build a choice list ────────────────
-    var parts_iter = std.mem.splitScalar(u8, inner, '/');
-    var expr_buf = ArrayList(Expression).init(allocator);
+    std.debug.print("inner: {s}\n", .{inner});
 
-    parts_iter.reset();
-    var i: usize = 0;
-    while (parts_iter.next()) |part| {
-        var lit_trim = std.mem.trim(u8, part, "\t\r\n\"");
-        lit_trim = std.mem.trimLeft(u8, lit_trim, "\" ");
-        lit_trim = std.mem.trimRight(u8, lit_trim, "\" ");
-
-        try expr_buf.append(Expression{ .literal = lit_trim });
-        i += 1;
-    }
+    var parser = Parser{ .input = inner };
+    const expr = try parser.parse(allocator);
 
     return Self{
         .name = name,
-        .expression = Expression{ .choice = expr_buf.items },
+        .expression = expr,
     };
+}
+
+test "Import tests in modules" {
+    _ = @import("rule/parser.zig");
 }
 
 test "Bool" {
@@ -96,12 +85,19 @@ test "BoolWithNull" {
     // Optional extra check: both literals exist
     switch (rule.expression) {
         .choice => |alts| {
-            try testing.expect(std.mem.eql(u8, alts[0].literal, "True"));
-            try testing.expect(std.mem.eql(u8, alts[1].literal, "False"));
-            try testing.expect(std.mem.eql(u8, alts[2].literal, "Null"));
-
-            // std.debug.print("alts.len: {d}", .{alts.len});
+            std.debug.print("alts.len: {d}\n", .{alts.len});
+            std.debug.print("alts: {any}\n", .{alts});
+            std.debug.print("alts[0]: {any}\n", .{alts[0]});
+            std.debug.print("alts[1]: {any}\n", .{alts[1]});
             try testing.expect(alts.len == 3);
+
+            switch (alts[0]) {
+                .literal => {
+                    std.debug.print("alts[0].literal: {s}\n", .{alts[0].literal});
+                    try testing.expect(std.mem.eql(u8, alts[0].literal, "True"));
+                },
+                else => return error.UnexpectedExpressionType,
+            }
         },
         else => unreachable,
     }
