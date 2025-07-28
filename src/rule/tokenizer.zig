@@ -1,4 +1,5 @@
 const std = @import("std");
+const testing = std.testing;
 const ArrayList = std.ArrayList;
 const Self = @This();
 
@@ -30,7 +31,7 @@ is_literal_mode: bool = false,
 
 // input is as:
 // ```
-// { "True" / "False" / "Null" }
+// "True" / "False" / "Null"
 // ```
 pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
     var word = ArrayList(u8).init(allocator);
@@ -93,4 +94,17 @@ pub fn new(input: []const u8, allocator: std.mem.Allocator) !*Self {
     };
 
     return instance;
+}
+
+test "Bool" {
+    const expression: []const u8 =
+        \\"True" / "False"
+    ;
+
+    const allocator = testing.allocator;
+    const tokenizer: *Self = try Self.new(expression, allocator);
+    const result: []const Token = try tokenizer.tokenize(allocator);
+
+    try testing.expect(std.mem.eql(u8, result[0].literal, "True"));
+    try testing.expect(std.mem.eql(u8, result[2].literal, "True"));
 }

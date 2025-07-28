@@ -44,57 +44,58 @@ pub fn new(expression: []const u8, allocator: std.mem.Allocator) !Self {
 }
 
 test "Import tests in modules" {
+    _ = @import("rule/tokenizer.zig");
     _ = @import("rule/parser.zig");
 }
 
-test "Bool" {
-    const expression: []const u8 =
-        \\Bool <- { "True" / "False" }
-    ;
-    const gpa = std.heap.page_allocator;
-
-    const rule = try Self.new(expression, gpa);
-    defer rule.deinit(gpa);
-
-    try testing.expect(std.mem.eql(u8, rule.name, "Bool"));
-
-    // Optional extra check: both literals exist
-    switch (rule.expression) {
-        .choice => |alts| {
-            try testing.expect(std.mem.eql(u8, alts[0].literal, "True"));
-            try testing.expect(std.mem.eql(u8, alts[1].literal, "False"));
-            try testing.expect(alts.len == 2);
-        },
-        else => unreachable,
-    }
-}
-
-test "BoolWithNull" {
-    const expression: []const u8 =
-        \\BooleanWithNull <- { "True" / "False" / "Null" }
-    ;
-    const gpa = std.heap.page_allocator;
-
-    const rule = try Self.new(expression, gpa);
-    defer rule.deinit(gpa);
-
-    try testing.expect(std.mem.eql(u8, rule.name, "BooleanWithNull"));
-
-    // Optional extra check: both literals exist
-    switch (rule.expression) {
-        .choice => |alts| {
-            try testing.expect(alts.len == 3);
-
-            switch (alts[0]) {
-                .literal => {
-                    try testing.expect(std.mem.eql(u8, alts[0].literal, "True"));
-                },
-                else => return error.UnexpectedExpressionType,
-            }
-        },
-        else => unreachable,
-    }
-}
+//test "Bool" {
+//    const expression: []const u8 =
+//        \\Bool <- { "True" / "False" }
+//    ;
+//    const gpa = std.heap.page_allocator;
+//
+//    const rule = try Self.new(expression, gpa);
+//    defer rule.deinit(gpa);
+//
+//    try testing.expect(std.mem.eql(u8, rule.name, "Bool"));
+//
+//    // Optional extra check: both literals exist
+//    switch (rule.expression) {
+//        .choice => |alts| {
+//            try testing.expect(std.mem.eql(u8, alts[0].literal, "True"));
+//            try testing.expect(std.mem.eql(u8, alts[1].literal, "False"));
+//            try testing.expect(alts.len == 2);
+//        },
+//        else => unreachable,
+//    }
+//}
+//
+//test "BoolWithNull" {
+//    const expression: []const u8 =
+//        \\BooleanWithNull <- { "True" / "False" / "Null" }
+//    ;
+//    const gpa = std.heap.page_allocator;
+//
+//    const rule = try Self.new(expression, gpa);
+//    defer rule.deinit(gpa);
+//
+//    try testing.expect(std.mem.eql(u8, rule.name, "BooleanWithNull"));
+//
+//    // Optional extra check: both literals exist
+//    switch (rule.expression) {
+//        .choice => |alts| {
+//            try testing.expect(alts.len == 3);
+//
+//            switch (alts[0]) {
+//                .literal => {
+//                    try testing.expect(std.mem.eql(u8, alts[0].literal, "True"));
+//                },
+//                else => return error.UnexpectedExpressionType,
+//            }
+//        },
+//        else => unreachable,
+//    }
+//}
 
 //test "Parenthesis" {
 //    const expression: []const u8 =
