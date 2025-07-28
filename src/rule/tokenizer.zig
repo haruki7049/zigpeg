@@ -35,7 +35,10 @@ is_literal_mode: bool = false,
 // ```
 pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
     var word = ArrayList(u8).init(allocator);
+    defer word.deinit();
+
     var words = ArrayList(Token).init(allocator);
+    defer words.deinit();
 
     while (self.peek() != null) {
         // If the word is quated
@@ -76,6 +79,23 @@ pub fn new(input: []const u8, allocator: std.mem.Allocator) !*Self {
     return instance;
 }
 
+pub fn free(self: *Self, allocator: std.mem.Allocator, tokens: []const Token) void {
+    // Free each token's allocated memory if applicable
+    for (tokens) |token| {
+        switch (token) {
+            .literal => |lit| allocator.free(lit),
+            .reference => |ref| allocator.free(ref),
+            else => {}, // Symbols don't own memory
+        }
+    }
+
+    // Free the token slice itself
+    allocator.free(tokens);
+
+    // Free the tokenizer instance
+    allocator.destroy(self);
+}
+
 test "Bool" {
     const expression: []const u8 =
         \\"True" / "False"
@@ -84,7 +104,8 @@ test "Bool" {
     const allocator = testing.allocator;
     const tokenizer: *Self = try Self.new(expression, allocator);
     const result: []const Token = try tokenizer.tokenize(allocator);
+    defer tokenizer.free(allocator, result);
 
     try testing.expect(std.mem.eql(u8, result[0].literal, "True"));
-    try testing.expect(std.mem.eql(u8, result[2].literal, "True"));
+    try testing.expect(std.mem.eql(u8, result[2].literal, "False"));
 }
