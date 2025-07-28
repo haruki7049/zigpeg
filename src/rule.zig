@@ -34,8 +34,6 @@ pub fn new(expression: []const u8, allocator: std.mem.Allocator) !Self {
     const brace_end = std.mem.lastIndexOfScalar(u8, expression, '}') orelse return error.InvalidSyntax;
     const inner = std.mem.trim(u8, expression[brace_start + 1 .. brace_end], " \t\r\n");
 
-    std.debug.print("inner: {s}\n", .{inner});
-
     var parser = Parser{ .input = inner };
     const expr = try parser.parse(allocator);
 
@@ -85,15 +83,10 @@ test "BoolWithNull" {
     // Optional extra check: both literals exist
     switch (rule.expression) {
         .choice => |alts| {
-            std.debug.print("alts.len: {d}\n", .{alts.len});
-            std.debug.print("alts: {any}\n", .{alts});
-            std.debug.print("alts[0]: {any}\n", .{alts[0]});
-            std.debug.print("alts[1]: {any}\n", .{alts[1]});
             try testing.expect(alts.len == 3);
 
             switch (alts[0]) {
                 .literal => {
-                    std.debug.print("alts[0].literal: {s}\n", .{alts[0].literal});
                     try testing.expect(std.mem.eql(u8, alts[0].literal, "True"));
                 },
                 else => return error.UnexpectedExpressionType,
