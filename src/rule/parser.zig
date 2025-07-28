@@ -20,9 +20,7 @@ pub fn parse(self: *Self, allocator: std.mem.Allocator) !Expression {
     const tokens: []const Token = try tokenizer.tokenize(allocator);
 
     const result = try parse_recurse(tokens);
-    std.debug.print("{any}\n", .{result});
-
-    @panic("TODO");
+    return result;
 }
 
 fn parse_recurse(tokens: []const Token) !Expression {
