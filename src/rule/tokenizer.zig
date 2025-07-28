@@ -69,23 +69,6 @@ pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
     return result;
 }
 
-fn pack_tokens(words: [][]const u8, allocator: std.mem.Allocator) ![]const Token {
-    var result = ArrayList(Token).init(allocator);
-    defer result.deinit();
-
-    for (words) |word| {
-        if (std.mem.eql(u8, "/", word)) {
-            try result.append(Token{ .symbol = .choice });
-        } else if (std.mem.eql(u8, "~", word)) {
-            try result.append(Token{ .symbol = .sequence });
-        } else {
-            try result.append(Token{ .literal = word });
-        }
-    }
-
-    return result.toOwnedSlice();
-}
-
 pub fn new(input: []const u8, allocator: std.mem.Allocator) !*Self {
     const instance = try allocator.create(Self);
     instance.* = Self{
