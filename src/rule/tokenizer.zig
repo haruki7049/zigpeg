@@ -6,7 +6,14 @@ const Self = @This();
 pub const Token = union(enum) {
     literal: []const u8,
     reference: []const u8,
-    symbol: u8, // '/', '~', '(', ')', etc.
+    symbol: Symbol, // '/', '~', '(', ')', etc.
+};
+
+pub const Symbol = enum {
+    choice,
+    sequence,
+    left_parenthesis,
+    right_parenthesis,
 };
 
 fn next(self: *Self) ?u8 {
@@ -57,8 +64,14 @@ pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
         }
 
         // Append symbols
-        if (self.now().? == '/' or self.now().? == '~' or self.now().? == '(' or self.now().? == ')') {
-            try words.append(Token{ .symbol = self.now().? });
+        if (self.now().? == '~') {
+            try words.append(Token{ .symbol = .sequence });
+        } else if (self.now().? == '/') {
+            try words.append(Token{ .symbol = .choice });
+        } else if (self.now().? == '(') {
+            try words.append(Token{ .symbol = .left_parenthesis });
+        } else if (self.now().? == ')') {
+            try words.append(Token{ .symbol = .right_parenthesis });
         }
 
         _ = self.next();

@@ -14,20 +14,10 @@ const ArrayList = std.ArrayList;
 name: []const u8,
 expression: Expression,
 
-pub fn deinit(self: Self, allocator: std.mem.Allocator) void {
-    switch (self.expression) {
-        .choice => |choices| allocator.free(choices),
-        .sequence => |seq| allocator.free(seq),
-        else => {},
-    }
-    allocator.free(self.name);
-}
-
 /// Creates a Rule
 pub fn new(expression: []const u8, allocator: std.mem.Allocator) !Self {
     const arrow_idx = std.mem.indexOf(u8, expression, "<-") orelse return error.InvalidSyntax;
-    const name_trim = std.mem.trim(u8, expression[0..arrow_idx], " \t\r\n");
-    const name = try allocator.dupe(u8, name_trim);
+    const name = std.mem.trim(u8, expression[0..arrow_idx], " \t\r\n");
 
     // ── expression string inside '{ }' ─────────────────────
     const brace_start = std.mem.indexOfScalar(u8, expression, '{') orelse return error.InvalidSyntax;
@@ -52,10 +42,8 @@ test "Bool" {
     const expression: []const u8 =
         \\Bool <- { "True" / "False" }
     ;
-    const gpa = std.heap.page_allocator;
-
-    const rule = try Self.new(expression, gpa);
-    defer rule.deinit(gpa);
+    const allocator = std.heap.page_allocator;
+    const rule = try Self.new(expression, allocator);
 
     try testing.expect(std.mem.eql(u8, rule.name, "Bool"));
 
@@ -74,10 +62,8 @@ test "BoolWithNull" {
     const expression: []const u8 =
         \\BooleanWithNull <- { "True" / "False" / "Null" }
     ;
-    const gpa = std.heap.page_allocator;
-
-    const rule = try Self.new(expression, gpa);
-    defer rule.deinit(gpa);
+    const allocator = std.heap.page_allocator;
+    const rule = try Self.new(expression, allocator);
 
     try testing.expect(std.mem.eql(u8, rule.name, "BooleanWithNull"));
 
@@ -89,6 +75,8 @@ test "BoolWithNull" {
             switch (alts[0]) {
                 .literal => {
                     try testing.expect(std.mem.eql(u8, alts[0].literal, "True"));
+                    try testing.expect(std.mem.eql(u8, alts[1].literal, "False"));
+                    try testing.expect(std.mem.eql(u8, alts[2].literal, "Null"));
                 },
                 else => return error.UnexpectedExpressionType,
             }
@@ -99,12 +87,10 @@ test "BoolWithNull" {
 
 test "Parenthesis" {
     const expression: []const u8 =
-        \\Parenthesis <- { "(" ")" }
+        \\Parenthesis <- { "(" ~ ")" }
     ;
-    const gpa = std.heap.page_allocator;
-
-    const rule = try Self.new(expression, gpa);
-    defer rule.deinit(gpa);
+    const allocator = std.heap.page_allocator;
+    const rule = try Self.new(expression, allocator);
 
     try testing.expect(std.mem.eql(u8, rule.name, "Parenthesis"));
 
@@ -114,7 +100,6 @@ test "Parenthesis" {
             try testing.expect(std.mem.eql(u8, alts[0].literal, "("));
             try testing.expect(std.mem.eql(u8, alts[1].literal, ")"));
 
-            std.debug.print("alts.len: {d}", .{alts.len});
             try testing.expect(alts.len == 2);
         },
         else => unreachable,
