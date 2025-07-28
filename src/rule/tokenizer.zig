@@ -58,20 +58,32 @@ pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
             self.is_literal_mode = !self.is_literal_mode;
         }
 
+        // Append symbols
+        if (!self.is_literal_mode and self.now().? == '~') {
+            try words.append(Token{ .symbol = .sequence });
+            _ = self.next();
+
+            continue;
+        } else if (!self.is_literal_mode and self.now().? == '/') {
+            try words.append(Token{ .symbol = .choice });
+            _ = self.next();
+
+            continue;
+        } else if (!self.is_literal_mode and self.now().? == '(') {
+            try words.append(Token{ .symbol = .left_parenthesis });
+            _ = self.next();
+
+            continue;
+        } else if (!self.is_literal_mode and self.now().? == ')') {
+            try words.append(Token{ .symbol = .right_parenthesis });
+            _ = self.next();
+
+            continue;
+        }
+
         // Append word's character
         if (self.is_literal_mode and self.now().? != '"') {
             try word.append(self.now().?);
-        }
-
-        // Append symbols
-        if (self.now().? == '~') {
-            try words.append(Token{ .symbol = .sequence });
-        } else if (self.now().? == '/') {
-            try words.append(Token{ .symbol = .choice });
-        } else if (self.now().? == '(') {
-            try words.append(Token{ .symbol = .left_parenthesis });
-        } else if (self.now().? == ')') {
-            try words.append(Token{ .symbol = .right_parenthesis });
         }
 
         _ = self.next();
@@ -138,4 +150,19 @@ test "BoolWithNull" {
     try testing.expect(std.mem.eql(u8, result[2].literal, "False"));
     try testing.expect(result[3].symbol == .choice);
     try testing.expect(std.mem.eql(u8, result[4].literal, "Null"));
+}
+
+test "Parenthesis" {
+    const expression: []const u8 =
+        \\"(" ~ ")"
+    ;
+
+    const allocator = testing.allocator;
+    const tokenizer: *Self = try Self.new(expression, allocator);
+    const result: []const Token = try tokenizer.tokenize(allocator);
+    defer tokenizer.free(allocator, result);
+
+    try testing.expect(std.mem.eql(u8, result[0].literal, "("));
+    try testing.expect(result[1].symbol == .sequence);
+    try testing.expect(std.mem.eql(u8, result[2].literal, ")"));
 }
