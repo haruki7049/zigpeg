@@ -122,3 +122,20 @@ test "Bool" {
     try testing.expect(std.mem.eql(u8, result[0].literal, "True"));
     try testing.expect(std.mem.eql(u8, result[2].literal, "False"));
 }
+
+test "BoolWithNull" {
+    const expression: []const u8 =
+        \\"True" / "False" / "Null"
+    ;
+
+    const allocator = testing.allocator;
+    const tokenizer: *Self = try Self.new(expression, allocator);
+    const result: []const Token = try tokenizer.tokenize(allocator);
+    defer tokenizer.free(allocator, result);
+
+    try testing.expect(std.mem.eql(u8, result[0].literal, "True"));
+    try testing.expect(result[1].symbol == .choice);
+    try testing.expect(std.mem.eql(u8, result[2].literal, "False"));
+    try testing.expect(result[3].symbol == .choice);
+    try testing.expect(std.mem.eql(u8, result[4].literal, "Null"));
+}
