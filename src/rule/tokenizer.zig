@@ -35,20 +35,17 @@ is_literal_mode: bool = false,
 // ```
 pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
     var word = ArrayList(u8).init(allocator);
-    defer word.deinit();
-
     var words = ArrayList(Token).init(allocator);
-    defer words.deinit();
 
     while (self.peek() != null) {
         // If the word is quated
         if (self.peek().? == '"') {
-            self.is_literal_mode = !self.is_literal_mode;
-
-            if (self.is_literal_mode == false) {
+            if (self.is_literal_mode) {
                 const w = try word.toOwnedSlice();
                 try words.append(Token{ .literal = w });
             }
+
+            self.is_literal_mode = !self.is_literal_mode;
         }
 
         // Append word's character
