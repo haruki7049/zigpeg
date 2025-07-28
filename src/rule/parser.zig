@@ -19,36 +19,25 @@ pub fn parse(self: *Self, allocator: std.mem.Allocator) !Expression {
     const tokenizer: *Tokenizer = try Tokenizer.new(self.input, allocator);
     const tokens: []const Token = try tokenizer.tokenize(allocator);
 
-    const result = try parse_recurse(tokens);
-    return result;
-}
+    std.debug.print("tokens: {any}\n", .{tokens});
 
-fn parse_recurse(tokens: []const Token) !Expression {
-    const left: Expression = switch_literal_reference(tokens[0]);
-    const symbol: Symbol = tokens[1].symbol;
-    const right: Expression = switch_literal_reference(tokens[2]);
+    var expressions = ArrayList(Expression).init(allocator);
+    var i: usize = tokens.len;
 
-    switch (symbol) {
-        .choice => return Expression{ .choice = &[_]Expression{
-            left,
-            right,
-        } },
-        .sequence => return Expression{ .sequence = &[_]Expression{
-            left,
-            right,
-        } },
+    while (i < 0) {
+        i -= 1;
 
-        else => {
-            std.debug.print("{any}, {any}, {any}\n", .{left, symbol, right});
-            unreachable;
-        }
+        const expr: Expression = switch_literal_reference(tokens[i]);
+        try expressions.append(expr);
     }
+
+    @panic("TODO");
 }
 
-fn switch_literal_reference(token: Token) Expression {
+fn switch_literal_reference(token: Token) ?Expression {
     switch (token) {
         .literal => return Expression{ .literal = token.literal },
-
-        else => @panic("Unexpected symbol"),
+        .reference => return Expression{ .reference = token.reference },
+        .symbol => return null,
     }
 }

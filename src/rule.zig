@@ -70,6 +70,7 @@ test "BoolWithNull" {
     // Optional extra check: both literals exist
     switch (rule.expression) {
         .choice => |alts| {
+            std.debug.print("alts.len: {d}", .{alts.len});
             try testing.expect(alts.len == 3);
 
             switch (alts[0]) {
