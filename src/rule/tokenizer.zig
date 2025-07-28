@@ -5,14 +5,7 @@ const Self = @This();
 pub const Token = union(enum) {
     literal: []const u8,
     reference: []const u8,
-    symbol: Symbol, // '/', '~', '(', ')', etc.
-};
-
-pub const Symbol = enum {
-    choice,
-    sequence,
-    left_parenthesis,
-    right_parenthesis,
+    symbol: u8, // '/', '~', '(', ')', etc.
 };
 
 fn next(self: *Self) ?u8 {
@@ -43,7 +36,7 @@ pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
     var word = ArrayList(u8).init(allocator);
     defer word.deinit();
 
-    var words = ArrayList([]const u8).init(allocator);
+    var words = ArrayList(Token).init(allocator);
     defer words.deinit();
 
     while (self.peek() != null) {
@@ -53,7 +46,7 @@ pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
 
             if (self.is_literal_mode == false) {
                 const w = try word.toOwnedSlice();
-                try words.append(w);
+                try words.append(Token{ .literal = w });
             }
         }
 
@@ -64,14 +57,13 @@ pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
 
         // Append symbols
         if (self.now().? == '/' or self.now().? == '~' or self.now().? == '(' or self.now().? == ')') {
-            const w: []const u8 = &[_]u8{self.now().?};
-            try words.append(w);
+            try words.append(Token{ .symbol = self.now().? });
         }
 
         _ = self.next();
     }
 
-    const result: []const Token = try pack_tokens(words.items, allocator);
+    const result: []const Token = try words.toOwnedSlice();
 
     return result;
 }

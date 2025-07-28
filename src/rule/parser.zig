@@ -16,7 +16,6 @@ pos: usize = 0,
 
 pub fn parse(self: *Self, allocator: std.mem.Allocator) !Expression {
     const tokenizer: *Tokenizer = try Tokenizer.new(self.input, allocator);
-    //defer tokenizer.free();
 
     const tokens: []const Token = try tokenizer.tokenize(allocator);
     std.debug.print("tokens: {any}\n", .{tokens});
