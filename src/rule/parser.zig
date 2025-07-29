@@ -31,6 +31,8 @@ pub fn parse(self: *Self, allocator: std.mem.Allocator) !Expression {
         try expressions.append(expr);
     }
 
+    std.debug.print("expressions.items: {any}\n", .{expressions.items});
+
     @panic("TODO");
 }
 
