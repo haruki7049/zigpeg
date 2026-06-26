@@ -23,8 +23,10 @@ input: []const u8,
 /// The current parsing index.
 pos: usize = 0,
 
+pub const Error = std.mem.Allocator.Error;
+
 /// Parses the input string and constructs an Expression tree.
-pub fn parse(self: *Self, allocator: std.mem.Allocator) !Expression {
+pub fn parse(self: *Self, allocator: std.mem.Allocator) Self.Error!Expression {
     const tokenizer: *Tokenizer = try Tokenizer.new(self.input, allocator);
     const tokens: []const Token = try tokenizer.tokenize(allocator);
 
