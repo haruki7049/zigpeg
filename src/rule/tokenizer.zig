@@ -52,12 +52,14 @@ position: usize,
 /// Indicates if the tokenizer is currently parsing a literal enclosed in quotes.
 is_literal_mode: bool = false,
 
+pub const Error = std.mem.Allocator.Error;
+
 /// Parses the input string and returns an array of tokens.
 // input is as:
 // ```
 // "True" / "False" / "Null"
 // ```
-pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
+pub fn tokenize(self: *Self, allocator: std.mem.Allocator) Self.Error![]const Token {
     var word: std.ArrayList(u8) = .empty;
     defer word.deinit(allocator);
 
@@ -112,7 +114,7 @@ pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
 }
 
 /// Allocates and returns a new Tokenizer instance.
-pub fn new(input: []const u8, allocator: std.mem.Allocator) !*Self {
+pub fn new(input: []const u8, allocator: std.mem.Allocator) Self.Error!*Self {
     const instance = try allocator.create(Self);
 
     instance.* = Self{
