@@ -16,16 +16,18 @@ name: []const u8,
 /// The parsed expression of the rule.
 expression: Expression,
 
-pub const Error = Parser.Error;
+pub const Error = Parser.Error || error{
+    InvalidSyntax,
+};
 
 /// Creates a new Rule instance from a string expression.
 pub fn new(expression: []const u8, allocator: std.mem.Allocator) Self.Error!Self {
-    const arrow_idx = std.mem.indexOf(u8, expression, "<-") orelse return error.InvalidSyntax;
+    const arrow_idx = std.mem.indexOf(u8, expression, "<-") orelse return Error.InvalidSyntax;
     const name = std.mem.trim(u8, expression[0..arrow_idx], " \t\r\n");
 
     // ── expression string inside '{ }' ─────────────────────
-    const brace_start = std.mem.indexOfScalar(u8, expression, '{') orelse return error.InvalidSyntax;
-    const brace_end = std.mem.lastIndexOfScalar(u8, expression, '}') orelse return error.InvalidSyntax;
+    const brace_start = std.mem.indexOfScalar(u8, expression, '{') orelse return Error.InvalidSyntax;
+    const brace_end = std.mem.lastIndexOfScalar(u8, expression, '}') orelse return Error.InvalidSyntax;
     const inner = std.mem.trim(u8, expression[brace_start + 1 .. brace_end], " \t\r\n");
 
     var parser = Parser{ .input = inner };
