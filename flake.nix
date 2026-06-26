@@ -1,7 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    systems.url = "github:nix-systems/default";
     flake-compat.url = "github:edolstra/flake-compat";
     flake-parts = {
       url = "github:hercules-ci/flake-parts";
@@ -16,13 +15,21 @@
   outputs =
     inputs:
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = import inputs.systems;
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "aarch64-darwin"
+      ];
+
       imports = [
         inputs.treefmt-nix.flakeModule
       ];
 
       perSystem =
-        { pkgs, ... }:
+        { pkgs, lib, ... }:
+        let
+          buildInputs = [ ];
+        in
         {
           treefmt = {
             projectRootFile = ".git/config";
@@ -30,11 +37,9 @@
             # Nix
             programs.nixfmt.enable = true;
 
-            # Rust
-            programs.rustfmt.enable = true;
-
-            # TOML
-            programs.taplo.enable = true;
+            # Zig
+            programs.zig.enable = true;
+            settings.formatter.zig.command = lib.getExe pkgs.zig_0_15;
 
             # GitHub Actions
             programs.actionlint.enable = true;
@@ -48,14 +53,18 @@
           };
 
           devShells.default = pkgs.mkShell {
-            packages = [
-              # Zig
-              pkgs.zig_0_14
-              pkgs.zls
-
-              # Nix
-              pkgs.nil
+            inherit buildInputs;
+            nativeBuildInputs = [
+              pkgs.zig_0_15 # Zig compiler
+              pkgs.zls_0_15 # Zig LSP
+              pkgs.nil # Nix LSP
+              pkgs.zon2nix # zon2nix
             ];
+
+            shellHook = ''
+              # Remove NIX_CFLAGS_COMPILE because zig cannot understand it
+              unset NIX_CFLAGS_COMPILE
+            '';
           };
         };
     };
