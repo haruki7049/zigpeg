@@ -1,20 +1,32 @@
+//! Tokenizer module for splitting expressions into tokens.
+
 const std = @import("std");
 const testing = std.testing;
 const Self = @This();
 
+/// Represents a lexical token from the input expression.
 pub const Token = union(enum) {
+    /// A literal string value.
     literal: []const u8,
+    /// A reference to another rule.
     reference: []const u8,
+    /// A special syntax symbol.
     symbol: Symbol, // '/', '~', '(', ')', etc.
 };
 
+/// Represents the supported syntax symbols.
 pub const Symbol = enum {
+    /// Represents the choice operator.
     choice,
+    /// Represents the sequence operator.
     sequence,
+    /// Represents the left parenthesis.
     left_parenthesis,
+    /// Represents the right parenthesis.
     right_parenthesis,
 };
 
+/// Advances the pointer and returns the next character.
 fn next(self: *Self) ?u8 {
     if (self.position >= self.input.len) return null;
     const c = self.input[self.position];
@@ -22,19 +34,25 @@ fn next(self: *Self) ?u8 {
     return c;
 }
 
+/// Returns the character at the current position without advancing.
 fn peek(self: *Self) ?u8 {
     if (self.position >= self.input.len) return null;
     return self.input[self.position];
 }
 
+/// Returns the character at the current position (alias for peek without bound check).
 fn now(self: Self) ?u8 {
     return self.input[self.position];
 }
 
+/// The input string to tokenize.
 input: []const u8,
+/// The current cursor position within the input string.
 position: usize,
+/// Indicates if the tokenizer is currently parsing a literal enclosed in quotes.
 is_literal_mode: bool = false,
 
+/// Parses the input string and returns an array of tokens.
 // input is as:
 // ```
 // "True" / "False" / "Null"
@@ -93,8 +111,10 @@ pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
     return result;
 }
 
+/// Allocates and returns a new Tokenizer instance.
 pub fn new(input: []const u8, allocator: std.mem.Allocator) !*Self {
     const instance = try allocator.create(Self);
+
     instance.* = Self{
         .input = input,
         .position = 0,
@@ -103,6 +123,7 @@ pub fn new(input: []const u8, allocator: std.mem.Allocator) !*Self {
     return instance;
 }
 
+/// Frees the tokenizer instance along with the generated tokens.
 pub fn free(self: *Self, allocator: std.mem.Allocator, tokens: []const Token) void {
     // Free each token's allocated memory if applicable
     for (tokens) |token| {

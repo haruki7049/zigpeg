@@ -1,6 +1,9 @@
+//! Build script for the zigpeg library.
+
 const std = @import("std");
 const l = @import("lightmix");
 
+/// Standard build function.
 pub fn build(b: *std.Build) anyerror!void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});

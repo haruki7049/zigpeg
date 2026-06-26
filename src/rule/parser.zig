@@ -1,20 +1,29 @@
+//! Parser module for converting tokens into an AST (Expression).
+
 const std = @import("std");
-const ArrayList = std.ArrayList;
 const Self = @This();
 const Tokenizer = @import("tokenizer.zig");
 const Token = Tokenizer.Token;
 const Symbol = Tokenizer.Symbol;
 
+/// Represents an element in the parsed AST.
 pub const Expression = union(enum) {
+    /// A literal string match.
     literal: []const u8,
+    /// A reference to another rule.
     reference: []const u8,
+    /// Multiple expressions to match any of them.
     choice: []const Expression,
+    /// Multiple expressions to match in sequence.
     sequence: []const Expression,
 };
 
+/// The input string to be parsed.
 input: []const u8,
+/// The current parsing index.
 pos: usize = 0,
 
+/// Parses the input string and constructs an Expression tree.
 pub fn parse(self: *Self, allocator: std.mem.Allocator) !Expression {
     const tokenizer: *Tokenizer = try Tokenizer.new(self.input, allocator);
     const tokens: []const Token = try tokenizer.tokenize(allocator);
@@ -36,6 +45,7 @@ pub fn parse(self: *Self, allocator: std.mem.Allocator) !Expression {
     @panic("TODO");
 }
 
+/// Converts a Token into a literal or reference Expression, or returns null.
 fn switch_literal_reference(token: Token) ?Expression {
     switch (token) {
         .literal => return Expression{ .literal = token.literal },

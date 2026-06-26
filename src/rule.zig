@@ -11,10 +11,12 @@ const Parser = @import("rule/parser.zig");
 const Expression = Parser.Expression;
 const ArrayList = std.ArrayList;
 
+/// The name of the rule.
 name: []const u8,
+/// The parsed expression of the rule.
 expression: Expression,
 
-/// Creates a Rule
+/// Creates a new Rule instance from a string expression.
 pub fn new(expression: []const u8, allocator: std.mem.Allocator) !Self {
     const arrow_idx = std.mem.indexOf(u8, expression, "<-") orelse return error.InvalidSyntax;
     const name = std.mem.trim(u8, expression[0..arrow_idx], " \t\r\n");
@@ -42,6 +44,7 @@ test "Bool" {
     const expression: []const u8 =
         \\Bool <- { "True" / "False" }
     ;
+
     const allocator = std.heap.page_allocator;
     const rule = try Self.new(expression, allocator);
 
@@ -62,6 +65,7 @@ test "BoolWithNull" {
     const expression: []const u8 =
         \\BooleanWithNull <- { "True" / "False" / "Null" }
     ;
+
     const allocator = std.heap.page_allocator;
     const rule = try Self.new(expression, allocator);
 
@@ -90,6 +94,7 @@ test "Parenthesis" {
     const expression: []const u8 =
         \\Parenthesis <- { "(" ~ ")" }
     ;
+
     const allocator = std.heap.page_allocator;
     const rule = try Self.new(expression, allocator);
 
@@ -100,7 +105,6 @@ test "Parenthesis" {
         .sequence => |alts| {
             try testing.expect(std.mem.eql(u8, alts[0].literal, "("));
             try testing.expect(std.mem.eql(u8, alts[1].literal, ")"));
-
             try testing.expect(alts.len == 2);
         },
         else => unreachable,
