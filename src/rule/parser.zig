@@ -21,14 +21,14 @@ pub fn parse(self: *Self, allocator: std.mem.Allocator) !Expression {
 
     std.debug.print("tokens: {any}\n", .{tokens});
 
-    var expressions = ArrayList(Expression).init(allocator);
+    var expressions: std.ArrayList(Expression) = .empty;
     var i: usize = tokens.len;
 
     while (i < 0) {
         i -= 1;
 
         const expr: Expression = switch_literal_reference(tokens[i]);
-        try expressions.append(expr);
+        try expressions.append(allocator, expr);
     }
 
     std.debug.print("expressions.items: {any}\n", .{expressions.items});

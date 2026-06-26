@@ -1,6 +1,5 @@
 const std = @import("std");
 const testing = std.testing;
-const ArrayList = std.ArrayList;
 const Self = @This();
 
 pub const Token = union(enum) {
@@ -41,18 +40,18 @@ is_literal_mode: bool = false,
 // "True" / "False" / "Null"
 // ```
 pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
-    var word = ArrayList(u8).init(allocator);
-    defer word.deinit();
+    var word: std.ArrayList(u8) = .empty;
+    defer word.deinit(allocator);
 
-    var words = ArrayList(Token).init(allocator);
-    defer words.deinit();
+    var words: std.ArrayList(Token) = .empty;
+    defer words.deinit(allocator);
 
     while (self.peek() != null) {
         // If the word is quated
         if (self.peek().? == '"') {
             if (self.is_literal_mode) {
-                const w = try word.toOwnedSlice();
-                try words.append(Token{ .literal = w });
+                const w = try word.toOwnedSlice(allocator);
+                try words.append(allocator, Token{ .literal = w });
             }
 
             self.is_literal_mode = !self.is_literal_mode;
@@ -60,22 +59,22 @@ pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
 
         // Append symbols
         if (!self.is_literal_mode and self.now().? == '~') {
-            try words.append(Token{ .symbol = .sequence });
+            try words.append(allocator, Token{ .symbol = .sequence });
             _ = self.next();
 
             continue;
         } else if (!self.is_literal_mode and self.now().? == '/') {
-            try words.append(Token{ .symbol = .choice });
+            try words.append(allocator, Token{ .symbol = .choice });
             _ = self.next();
 
             continue;
         } else if (!self.is_literal_mode and self.now().? == '(') {
-            try words.append(Token{ .symbol = .left_parenthesis });
+            try words.append(allocator, Token{ .symbol = .left_parenthesis });
             _ = self.next();
 
             continue;
         } else if (!self.is_literal_mode and self.now().? == ')') {
-            try words.append(Token{ .symbol = .right_parenthesis });
+            try words.append(allocator, Token{ .symbol = .right_parenthesis });
             _ = self.next();
 
             continue;
@@ -83,13 +82,13 @@ pub fn tokenize(self: *Self, allocator: std.mem.Allocator) ![]const Token {
 
         // Append word's character
         if (self.is_literal_mode and self.now().? != '"') {
-            try word.append(self.now().?);
+            try word.append(allocator, self.now().?);
         }
 
         _ = self.next();
     }
 
-    const result: []const Token = try words.toOwnedSlice();
+    const result: []const Token = try words.toOwnedSlice(allocator);
 
     return result;
 }
