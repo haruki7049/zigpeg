@@ -99,7 +99,7 @@
               unset NIX_CFLAGS_COMPILE
             '';
 
-            inputsFrom = [ config.treefmt.build.devShell ];
+            # inputsFrom = [ config.treefmt.build.devShell ];
           };
         };
     };
