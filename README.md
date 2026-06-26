@@ -4,4 +4,4 @@ PEG parser generator by ziglang. I ~~would like to~~ create this library using o
 
 # Supported zig version
 
-- 0.14.1
+- 0.15.2
