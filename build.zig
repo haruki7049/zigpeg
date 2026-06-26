@@ -1,39 +1,31 @@
 const std = @import("std");
+const l = @import("lightmix");
 
-pub fn build(b: *std.Build) void {
+pub fn build(b: *std.Build) anyerror!void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    // Library declaration
-    const lib_mod = b.addModule("zigpeg", .{
-        .root_source_file = b.path("src/root.zig"),
+    // Modules
+    const mod = b.createModule(.{
+        .root_source_file = b.path("src/zigpeg.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{},
     });
-    const lib = b.addStaticLibrary(.{
+
+    // Static Library Install
+    const lib = b.addLibrary(.{
+        .linkage = .static,
         .name = "zigpeg",
-        .root_module = lib_mod,
+        .root_module = mod,
     });
     b.installArtifact(lib);
 
     // Unit tests
-    const lib_unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);
+    const unit_tests = b.addTest(.{ .root_module = mod });
+    const run_unit_tests = b.addRunArtifact(unit_tests);
 
     // Test step
     const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&run_lib_unit_tests.step);
-
-    // Docs
-    const docs_step = b.step("docs", "Emit docs");
-    const docs_install = b.addInstallDirectory(.{
-        .source_dir = lib.getEmittedDocs(),
-        .install_dir = .prefix,
-        .install_subdir = "share/zigpeg/docs",
-    });
-    docs_step.dependOn(&docs_install.step);
+    test_step.dependOn(&run_unit_tests.step);
 }
