@@ -98,6 +98,8 @@
               # Remove NIX_CFLAGS_COMPILE because zig cannot understand it
               unset NIX_CFLAGS_COMPILE
             '';
+
+            inputsFrom = [ config.treefmt.build.devShell ];
           };
         };
     };
