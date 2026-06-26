@@ -26,9 +26,33 @@
       ];
 
       perSystem =
-        { pkgs, lib, ... }:
+        {
+          config,
+          lib,
+          pkgs,
+          ...
+        }:
         let
           buildInputs = [ ];
+
+          zigpeg = pkgs.stdenv.mkDerivation {
+            name = "zigpeg";
+            src = lib.cleanSource ./.;
+            doCheck = true;
+
+            inherit buildInputs;
+            nativeBuildInputs = [
+              pkgs.zig_0_15.hook
+              pkgs.pkg-config
+            ];
+
+            postConfigure = ''
+              ln -s ${pkgs.callPackage ./.deps.nix { }} $ZIG_GLOBAL_CACHE_DIR/p
+
+              # Remove NIX_CFLAGS_COMPILE because zig cannot understand it
+              unset NIX_CFLAGS_COMPILE
+            '';
+          };
         in
         {
           treefmt = {
@@ -50,6 +74,15 @@
             # ShellScript
             programs.shellcheck.enable = true;
             programs.shfmt.enable = true;
+          };
+
+          packages = {
+            inherit zigpeg;
+            default = zigpeg;
+          };
+
+          checks = {
+            inherit zigpeg;
           };
 
           devShells.default = pkgs.mkShell {
