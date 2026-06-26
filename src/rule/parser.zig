@@ -38,7 +38,7 @@ pub fn parse(self: *Self, allocator: std.mem.Allocator) Self.Error!Expression {
     while (i < 0) {
         i -= 1;
 
-        const expr: Expression = switch_literal_reference(tokens[i]);
+        const expr: ?Expression = switch_literal_reference(tokens[i]);
         try expressions.append(allocator, expr);
     }
 
