@@ -16,8 +16,10 @@ name: []const u8,
 /// The parsed expression of the rule.
 expression: Expression,
 
+pub const Error = Parser.Error;
+
 /// Creates a new Rule instance from a string expression.
-pub fn new(expression: []const u8, allocator: std.mem.Allocator) !Self {
+pub fn new(expression: []const u8, allocator: std.mem.Allocator) Self.Error!Self {
     const arrow_idx = std.mem.indexOf(u8, expression, "<-") orelse return error.InvalidSyntax;
     const name = std.mem.trim(u8, expression[0..arrow_idx], " \t\r\n");
 
